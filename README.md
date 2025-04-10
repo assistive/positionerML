@@ -1,4 +1,8 @@
-# Enhanced RNN for IMU-Based Dead Reckoning 
+# positionerML
+
+![positioner_small](https://github.com/user-attachments/assets/d16d701f-c757-47c5-9732-da61877da64a)
+
+# Enhanced RNN for IMU-Based Dead Reckoning 
 
 This repository provides an enhanced RNN training pipeline for IMU-based dead reckoning during GPS outages. The goal is to predict position changes from gyroscope and accelerometer data, allowing accurate position tracking for up to 60 seconds without GPS.
 
