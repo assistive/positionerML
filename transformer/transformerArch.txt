@@ -1,0 +1,26 @@
+Input Sequence (600 time steps × 9 features)
+    ↓
+Input Embedding Layer (maps to dimension d=128)
+    ↓
+Positional Encoding (added to embeddings)
+    ↓
+Transformer Encoder Block 1
+    - Multi-Head Self-Attention (8 heads)
+    - Layer Normalization
+    - Feed-Forward Network
+    - Residual Connections
+    ↓
+Transformer Encoder Block 2
+    ↓
+Transformer Encoder Block 3
+    ↓
+Global Average Pooling
+    ↓
+Dense Layer (64 units, ReLU)
+    ↓
+Dense Layer (32 units, ReLU)
+    ↓
+Output Heads:
+    - Classification Head (sigmoid): Drowsy/Alert
+    - Regression Head (linear): Drowsiness Score
+    - Attention Head: Feature Attribution
