@@ -172,3 +172,16 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+# TensorFlow Lite model files (may be large)
+app/src/main/assets/*.tflite
+
+# CoreML model files (may be large)
+iosApp/Resources/*.mlmodel
+iosApp/Resources/*.mlmodelc
+
+# TCN model training artifacts
+model-training/*.h5
+model-training/*.pb
+model-training/*.tflite
+model-training/checkpoints/
+model-training/*.mlmodel
