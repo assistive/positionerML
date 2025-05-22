@@ -1,3 +1,7 @@
+# positionerML
+
+![positioner_small](https://github.com/user-attachments/assets/d16d701f-c757-47c5-9732-da61877da64a)
+
 # Visual Navigation System
 
 A cutting-edge mobile visual navigation system that combines computer vision, deep learning, and location intelligence to provide robust indoor/outdoor navigation without relying solely on GPS.
