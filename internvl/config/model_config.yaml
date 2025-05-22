@@ -1,0 +1,44 @@
+# internvl/config/model_config.yaml
+
+model:
+  name: "internvl2-2b"
+  variant: "OpenGVLab/InternVL2-2B"
+  cache_dir: "./models/pretrained/"
+  
+  # Model architecture settings
+  vision_encoder:
+    patch_size: 14
+    image_size: 448
+    hidden_size: 1024
+    num_attention_heads: 16
+    num_hidden_layers: 24
+    
+  language_model:
+    vocab_size: 92544
+    hidden_size: 2048
+    intermediate_size: 5632
+    num_attention_heads: 16
+    num_hidden_layers: 24
+    max_position_embeddings: 8192
+    
+  connector:
+    type: "mlp"
+    hidden_size: 2048
+    
+# Mobile optimization settings
+mobile:
+  quantization:
+    enabled: true
+    bits: 8
+    scheme: "dynamic"
+  
+  optimization:
+    prune_attention_heads: false
+    reduce_embedding_size: false
+    use_distillation: false
+    
+  export:
+    batch_size: 1
+    sequence_length: 512
+    image_size: 224  # Reduced for mobile
+

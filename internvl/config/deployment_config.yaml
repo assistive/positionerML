@@ -1,0 +1,31 @@
+# internvl/config/deployment_config.yaml
+
+deployment:
+  ios:
+    target_version: "15.0"
+    compute_units: "neural_engine"
+    precision: "float16"
+    
+    coreml:
+      model_name: "InternVLMobile"
+      model_description: "InternVL vision-language model optimized for mobile"
+      model_author: "Your Organization"
+      
+    optimization:
+      quantize_weights: true
+      compute_precision: "mixed"
+      
+  android:
+    target_api: 24
+    delegates: ["gpu", "nnapi"]
+    
+    tflite:
+      representative_dataset_size: 100
+      optimization: ["DEFAULT"]
+      supported_ops: ["TFLITE_BUILTINS", "SELECT_TF_OPS"]
+      
+    optimization:
+      quantize: true
+      prune: false
+      cluster: false
+
