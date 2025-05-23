@@ -315,6 +315,289 @@ class SpatialLM(PreTrainedModel):
         # Return spatial predictions
         return outputs.spatial_predictions.cpu().numpy()
 
+# spatiallm/models/spatialLM.py (continued from previous content)
+
+class SpatialAttention(nn.Module):
+    """
+    Spatial attention mechanism for integrating spatial information with language representations.
+    """
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.hidden_size = config.hidden_size
+        self.num_attention_heads = config.spatial_attention_heads
+        self.head_dim = self.hidden_size // self.num_attention_heads
+        
+        # Query, Key, Value projections
+        self.query = nn.Linear(self.hidden_size, self.hidden_size)
+        self.key = nn.Linear(self.hidden_size, self.hidden_size)
+        self.value = nn.Linear(self.hidden_size, self.hidden_size)
+        
+        # Output projection
+        self.output = nn.Linear(self.hidden_size, self.hidden_size)
+        
+        # Layer normalization and dropout
+        self.layer_norm = nn.LayerNorm(self.hidden_size, eps=config.spatial_norm_eps)
+        self.dropout = nn.Dropout(config.spatial_dropout)
+        
+    def forward(self, hidden_states, spatial_embeddings, attention_mask=None):
+        """
+        Apply spatial attention to integrate spatial information with language representations.
+        
+        Args:
+            hidden_states: Language model hidden states [batch_size, seq_len, hidden_size]
+            spatial_embeddings: Spatial embeddings [batch_size, hidden_size]
+            attention_mask: Optional attention mask [batch_size, seq_len]
+            
+        Returns:
+            Updated hidden states with spatial information
+        """
+        batch_size, seq_len, _ = hidden_states.shape
+        
+        # Expand spatial embeddings to sequence length
+        spatial_embeddings = spatial_embeddings.unsqueeze(1).expand(-1, seq_len, -1)
+        
+        # Compute query, key, value
+        queries = self.query(hidden_states)
+        keys = self.key(spatial_embeddings)
+        values = self.value(spatial_embeddings)
+        
+        # Reshape for multi-head attention
+        queries = queries.view(batch_size, seq_len, self.num_attention_heads, self.head_dim).transpose(1, 2)
+        keys = keys.view(batch_size, seq_len, self.num_attention_heads, self.head_dim).transpose(1, 2)
+        values = values.view(batch_size, seq_len, self.num_attention_heads, self.head_dim).transpose(1, 2)
+        
+        # Compute attention scores
+        attention_scores = torch.matmul(queries, keys.transpose(-2, -1)) / np.sqrt(self.head_dim)
+        
+        # Apply attention mask if provided
+        if attention_mask is not None:
+            attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+            attention_scores = attention_scores.masked_fill(attention_mask == 0, -1e9)
+        
+        # Apply softmax
+        attention_probs = F.softmax(attention_scores, dim=-1)
+        attention_probs = self.dropout(attention_probs)
+        
+        # Apply attention to values
+        context = torch.matmul(attention_probs, values)
+        
+        # Reshape back to original shape
+        context = context.transpose(1, 2).contiguous().view(batch_size, seq_len, self.hidden_size)
+        
+        # Output projection
+        output = self.output(context)
+        output = self.dropout(output)
+        
+        # Residual connection and layer normalization
+        output = self.layer_norm(hidden_states + output)
+        
+        return output
+
+# spatiallm/models/layers.py
+
+"""
+Custom layers for SpatialLM model.
+"""
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+from typing import Optional, Tuple, Union
+
+class SpatialConvBlock(nn.Module):
+    """
+    Convolutional block for processing spatial features.
+    """
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, activation='relu'):
+        super().__init__()
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size, stride, padding)
+        self.norm = nn.BatchNorm1d(out_channels)
+        
+        if activation == 'relu':
+            self.activation = nn.ReLU()
+        elif activation == 'gelu':
+            self.activation = nn.GELU()
+        else:
+            self.activation = nn.Identity()
+            
+    def forward(self, x):
+        """
+        Forward pass.
+        
+        Args:
+            x: Input tensor [batch_size, in_channels, seq_len]
+            
+        Returns:
+            Output tensor [batch_size, out_channels, seq_len]
+        """
+        x = self.conv(x)
+        x = self.norm(x)
+        x = self.activation(x)
+        return x
+
+class SpatialTransformerBlock(nn.Module):
+    """
+    Transformer block with spatial awareness.
+    """
+    def __init__(self, hidden_size, num_heads, dropout=0.1, spatial_dim=3):
+        super().__init__()
+        self.attention = nn.MultiheadAttention(hidden_size, num_heads, dropout=dropout, batch_first=True)
+        self.norm1 = nn.LayerNorm(hidden_size)
+        self.norm2 = nn.LayerNorm(hidden_size)
+        
+        self.feed_forward = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size * 4),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_size * 4, hidden_size),
+            nn.Dropout(dropout)
+        )
+        
+        # Spatial projection
+        self.spatial_projection = nn.Linear(spatial_dim, hidden_size)
+        
+    def forward(self, x, spatial_coords=None, attention_mask=None):
+        """
+        Forward pass.
+        
+        Args:
+            x: Input tensor [batch_size, seq_len, hidden_size]
+            spatial_coords: Optional spatial coordinates [batch_size, spatial_dim]
+            attention_mask: Optional attention mask
+            
+        Returns:
+            Output tensor [batch_size, seq_len, hidden_size]
+        """
+        # Add spatial information if provided
+        if spatial_coords is not None:
+            spatial_features = self.spatial_projection(spatial_coords)
+            spatial_features = spatial_features.unsqueeze(1).expand(-1, x.size(1), -1)
+            x = x + spatial_features
+        
+        # Multi-head attention
+        residual = x
+        x = self.norm1(x)
+        x, _ = self.attention(x, x, x, attn_mask=attention_mask)
+        x = residual + x
+        
+        # Feed-forward network
+        residual = x
+        x = self.norm2(x)
+        x = self.feed_forward(x)
+        x = residual + x
+        
+        return x
+
+class PositionalEncoding(nn.Module):
+    """
+    Positional encoding for transformer models.
+    """
+    def __init__(self, d_model, max_len=5000):
+        super().__init__()
+        
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        
+        pe = pe.unsqueeze(0).transpose(0, 1)
+        self.register_buffer('pe', pe)
+        
+    def forward(self, x):
+        """
+        Add positional encoding to input.
+        
+        Args:
+            x: Input tensor [seq_len, batch_size, d_model]
+            
+        Returns:
+            Output tensor with positional encoding added
+        """
+        x = x + self.pe[:x.size(0), :]
+        return x
+
+class SpatialPooling(nn.Module):
+    """
+    Pooling layer for spatial features.
+    """
+    def __init__(self, pool_type='mean', spatial_dim=3):
+        super().__init__()
+        self.pool_type = pool_type
+        self.spatial_dim = spatial_dim
+        
+        if pool_type == 'attention':
+            self.attention_weights = nn.Linear(spatial_dim, 1)
+            
+    def forward(self, x, spatial_coords=None):
+        """
+        Apply pooling to spatial features.
+        
+        Args:
+            x: Input tensor [batch_size, seq_len, hidden_size]
+            spatial_coords: Optional spatial coordinates for attention-based pooling
+            
+        Returns:
+            Pooled features [batch_size, hidden_size]
+        """
+        if self.pool_type == 'mean':
+            return torch.mean(x, dim=1)
+        elif self.pool_type == 'max':
+            return torch.max(x, dim=1)[0]
+        elif self.pool_type == 'attention' and spatial_coords is not None:
+            # Compute attention weights based on spatial coordinates
+            attn_weights = self.attention_weights(spatial_coords)
+            attn_weights = F.softmax(attn_weights, dim=1)
+            
+            # Apply weighted pooling
+            pooled = torch.sum(x * attn_weights.unsqueeze(-1), dim=1)
+            return pooled
+        else:
+            # Default to mean pooling
+            return torch.mean(x, dim=1)
+
+class SpatialGate(nn.Module):
+    """
+    Gating mechanism for spatial features.
+    """
+    def __init__(self, hidden_size, spatial_dim=3):
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.spatial_dim = spatial_dim
+        
+        # Gate computation
+        self.gate_projection = nn.Linear(hidden_size + spatial_dim, hidden_size)
+        
+    def forward(self, hidden_states, spatial_coords):
+        """
+        Apply spatial gating to hidden states.
+        
+        Args:
+            hidden_states: Hidden states [batch_size, seq_len, hidden_size]
+            spatial_coords: Spatial coordinates [batch_size, spatial_dim]
+            
+        Returns:
+            Gated hidden states
+        """
+        batch_size, seq_len, _ = hidden_states.shape
+        
+        # Expand spatial coordinates
+        spatial_expanded = spatial_coords.unsqueeze(1).expand(-1, seq_len, -1)
+        
+        # Concatenate hidden states and spatial coords
+        combined = torch.cat([hidden_states, spatial_expanded], dim=-1)
+        
+        # Compute gate values
+        gate = torch.sigmoid(self.gate_projection(combined))
+        
+        # Apply gate
+        gated_hidden_states = hidden_states * gate
+        
+        return gated_hidden_states
+
 @dataclass
 class SpatialLMOutput:
     """
