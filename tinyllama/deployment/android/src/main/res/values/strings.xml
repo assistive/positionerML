@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TinyLlama Mobile</string>
+    <string name="prompt_hint">Enter your prompt here...</string>
+    <string name="generate_button">Generate Text</string>
+    <string name="generating">Generating...</string>
+    <string name="model_not_loaded">Model not loaded</string>
+    <string name="enter_prompt">Please enter a prompt</string>
+</resources>
