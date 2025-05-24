@@ -1,0 +1,246 @@
+# config/model_config.yaml
+model:
+  # Base model configuration
+  name: "bert-base-uncased"
+  cache_dir: "./models/pretrained"
+  
+  # Architecture parameters
+  hidden_size: 768
+  num_hidden_layers: 12
+  num_attention_heads: 12
+  intermediate_size: 3072
+  max_position_embeddings: 512
+  type_vocab_size: 2
+  
+  # Mobile optimization
+  mobile_optimized: true
+  mobile:
+    hidden_size: 512      # Reduced for mobile
+    num_hidden_layers: 6  # Fewer layers
+    num_attention_heads: 8
+    intermediate_size: 2048
+    
+  # Vocabulary settings
+  vocab_size: 30000
+  pad_token_id: 0
+  cls_token_id: 101
+  sep_token_id: 102
+  mask_token_id: 103
+  unk_token_id: 100
+
+# Special tokens
+special_tokens:
+  - "[PAD]"
+  - "[UNK]"
+  - "[CLS]"
+  - "[SEP]"
+  - "[MASK]"
+
+---
+
+# config/training_config.yaml
+training:
+  # Basic training parameters
+  num_epochs: 3
+  batch_size: 16
+  gradient_accumulation_steps: 4
+  learning_rate: 2e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  
+  # Advanced training
+  max_grad_norm: 1.0
+  fp16: true
+  bf16: false
+  dataloader_num_workers: 4
+  
+  # Optimizer settings
+  optimizer:
+    type: "adamw"
+    beta1: 0.9
+    beta2: 0.999
+    epsilon: 1e-8
+    
+  # Learning rate scheduler
+  scheduler:
+    type: "linear"
+    warmup_steps: 500
+    
+  # Checkpointing
+  save_strategy: "steps"
+  save_steps: 500
+  save_total_limit: 3
+  
+  # Evaluation
+  evaluation_strategy: "steps"
+  eval_steps: 500
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  
+  # Logging
+  logging_steps: 100
+  logging_dir: "./logs"
+  report_to: ["tensorboard"]
+  
+  # Early stopping
+  early_stopping:
+    patience: 5
+    threshold: 0.001
+    
+  # Mobile-specific training
+  mobile_training:
+    knowledge_distillation: true
+    teacher_model: "bert-base-uncased"
+    temperature: 4.0
+    alpha: 0.7
+    
+  # Fine-tuning options
+  fine_tuning:
+    freeze_embeddings: false
+    freeze_encoder_layers: 0  # Number of layers to freeze
+    
+data:
+  # Data processing
+  max_length: 512
+  padding: "max_length"
+  truncation: true
+  return_overflowing_tokens: false
+  
+  # Data splits
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  
+  # Data augmentation
+  augmentation:
+    enabled: false
+    synonym_replacement: 0.1
+    random_insertion: 0.1
+    random_swap: 0.1
+    random_deletion: 0.1
+
+---
+
+# config/mobile_config.yaml
+mobile:
+  # General mobile settings
+  target_platforms: ["ios", "android"]
+  max_model_size_mb: 50
+  target_inference_time_ms: 100
+  
+  # iOS (CoreML) settings
+  ios:
+    deployment_target: "15.0"
+    compute_units: "neural_engine"  # neural_engine, cpu_and_gpu, cpu_only
+    precision: "float16"
+    
+    optimization:
+      quantize_weights: true
+      prune_weights: false
+      compress_weights: true
+      
+    # CoreML specific
+    coreml:
+      minimum_deployment_target: "iOS15"
+      model_name: "BERTMobile"
+      model_description: "Optimized BERT model for mobile inference"
+      model_author: "Your Organization"
+      
+  # Android (TensorFlow Lite) settings
+  android:
+    api_level: 24
+    delegates: ["gpu", "nnapi"]
+    
+    optimization:
+      quantization: "dynamic"  # dynamic, float16, int8
+      representative_dataset_size: 100
+      
+    # TensorFlow Lite specific
+    tflite:
+      supported_ops: ["TFLITE_BUILTINS", "SELECT_TF_OPS"]
+      allow_custom_ops: false
+      
+  # Optimization strategies
+  optimization:
+    # Quantization
+    quantization:
+      enabled: true
+      method: "dynamic"  # static, dynamic, qat
+      calibration_dataset_size: 1000
+      
+    # Pruning
+    pruning:
+      enabled: false
+      sparsity: 0.5
+      schedule: "polynomial"
+      
+    # Knowledge distillation
+    distillation:
+      enabled: true
+      teacher_model: "bert-base-uncased"
+      temperature: 4.0
+      alpha: 0.7
+      
+    # Layer reduction
+    layer_reduction:
+      enabled: true
+      keep_layers: [0, 2, 4, 6, 8, 10]  # Keep every other layer
+      
+  # Performance targets
+  performance:
+    max_latency_ms: 100
+    max_memory_mb: 200
+    min_accuracy: 0.85  # Minimum acceptable accuracy after optimization
+
+---
+
+# config/vocab_config.yaml
+vocabulary:
+  # Vocabulary building settings
+  vocab_size: 30000
+  min_frequency: 5
+  max_frequency: 0.95  # Remove tokens that appear in >95% of documents
+  
+  # Special tokens (order matters!)
+  special_tokens:
+    - "[PAD]"
+    - "[UNK]"
+    - "[CLS]"
+    - "[SEP]"
+    - "[MASK]"
+    
+  # Optional domain-specific tokens
+  domain_tokens: []
+    # - "[DOMAIN_SPECIFIC_TOKEN]"
+    # - "[ENTITY]"
+    # - "[PRODUCT]"
+    
+  # Tokenization settings
+  tokenization:
+    do_lower_case: true
+    strip_accents: true
+    never_split: ["[UNK]", "[SEP]", "[PAD]", "[CLS]", "[MASK]"]
+    
+  # Subword tokenization (WordPiece)
+  wordpiece:
+    unk_token: "[UNK]"
+    max_input_chars_per_word: 100
+    continuing_subword_prefix: "##"
+    
+  # Text preprocessing
+  preprocessing:
+    remove_urls: true
+    remove_emails: true
+    remove_phone_numbers: true
+    remove_special_chars: false
+    normalize_whitespace: true
+    
+  # Language-specific settings
+  language: "en"  # Language code
+  
+  # Output settings
+  output:
+    save_vocab_file: true
+    save_tokenizer_json: true
+    save_merges_file: false  # For BPE tokenizers
+    save_statistics: true
