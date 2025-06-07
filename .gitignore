@@ -185,3 +185,4 @@ model-training/*.pb
 model-training/*.tflite
 model-training/checkpoints/
 model-training/*.mlmodel
+.DS_Store

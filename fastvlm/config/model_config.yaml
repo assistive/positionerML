@@ -1,0 +1,120 @@
+# fastvlm/config/model_config.yaml
+
+model:
+  name: "fastvlm-base"
+  type: "vision_language"
+  
+  # Vision encoder configuration
+  vision_encoder:
+    type: "efficient_vit"
+    image_size: 224
+    patch_size: 16
+    num_channels: 3
+    hidden_size: 768
+    num_hidden_layers: 6
+    num_attention_heads: 12
+    intermediate_size: 3072
+    hidden_dropout_prob: 0.1
+    attention_probs_dropout_prob: 0.1
+    layer_norm_eps: 1e-12
+    # Multi-scale processing
+    use_multi_scale: true
+    scales: [4, 8, 16]
+    
+  # Language model configuration
+  language_model:
+    type: "opt"
+    name: "facebook/opt-1.3b"
+    hidden_size: 2048
+    num_hidden_layers: 24
+    num_attention_heads: 32
+    intermediate_size: 8192
+    vocab_size: 50272
+    max_position_embeddings: 2048
+    
+  # Vision-language fusion
+  fusion:
+    hidden_size: 768
+    num_vision_tokens: 256
+    max_vision_tokens: 576
+    token_selection_method: "importance"  # importance, random, uniform
+    
+  # Attention configuration
+  attention:
+    type: "linear"  # linear, standard, flash
+    num_heads: 12
+    attention_dropout: 0.1
+    use_cached_vision_features: true
+    
+  # Cross-modal adapter
+  adapter:
+    num_layers: 4
+    adapter_size: 256
+    adapter_dropout: 0.1
+    
+# Model variants
+variants:
+  fastvlm-tiny:
+    vision_encoder:
+      hidden_size: 384
+      num_hidden_layers: 4
+      num_attention_heads: 6
+    language_model:
+      name: "facebook/opt-350m"
+    fusion:
+      num_vision_tokens: 49
+      
+  fastvlm-small:
+    vision_encoder:
+      hidden_size: 512
+      num_hidden_layers: 4
+      num_attention_heads: 8
+    language_model:
+      name: "facebook/opt-350m"
+    fusion:
+      num_vision_tokens: 100
+      
+  fastvlm-base:
+    # Uses default configuration above
+    
+  fastvlm-large:
+    vision_encoder:
+      hidden_size: 1024
+      num_hidden_layers: 8
+      num_attention_heads: 16
+    language_model:
+      name: "facebook/opt-2.7b"
+    fusion:
+      num_vision_tokens: 400
+      
+# Mobile optimization settings
+mobile:
+  target_platforms: ["ios", "android"]
+  optimization:
+    quantization:
+      enabled: true
+      bits: 8
+      quantization_type: "dynamic"
+    pruning:
+      enabled: true
+      sparsity: 0.5
+      structured: true
+    distillation:
+      enabled: false
+      teacher_model: "fastvlm-large"
+      temperature: 5.0
+      
+# Inference optimization
+inference:
+  use_flash_attention: false  # Requires specific hardware
+  use_xformers: false
+  compile_model: true  # torch.compile
+  enable_cudnn_benchmark: true
+  mixed_precision: true
+  
+# Hardware requirements
+requirements:
+  min_gpu_memory: 8  # GB
+  recommended_gpu_memory: 16  # GB
+  min_cpu_memory: 16  # GB
+  supported_gpus: ["V100", "A100", "RTX3090", "RTX4090"]

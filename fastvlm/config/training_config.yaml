@@ -1,0 +1,151 @@
+# fastvlm/config/training_config.yaml
+
+training:
+  # Model selection
+  model_name: "fastvlm-base"
+  pretrained_model_path: null  # Path to pretrained model if continuing training
+  
+  # Data settings
+  data:
+    train_data_path: "./data/train.json"
+    val_data_path: "./data/val.json"
+    test_data_path: "./data/test.json"
+    image_size: 224
+    max_text_length: 77
+    num_workers: 8
+    prefetch_factor: 2
+    persistent_workers: true
+    
+  # Training hyperparameters
+  num_epochs: 10
+  batch_size: 32
+  gradient_accumulation_steps: 4
+  effective_batch_size: 128  # batch_size * gradient_accumulation_steps
+  
+  # Optimizer settings
+  optimizer:
+    type: "adamw"
+    learning_rate: 5e-5
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
+    eps: 1e-8
+    
+  # Learning rate scheduler
+  scheduler:
+    type: "cosine"
+    warmup_ratio: 0.1
+    min_lr: 1e-6
+    
+  # Gradient settings
+  max_grad_norm: 1.0
+  gradient_checkpointing: true
+  
+  # Mixed precision training
+  mixed_precision:
+    enabled: true
+    dtype: "fp16"  # fp16, bf16, or None
+    
+  # LoRA settings
+  lora:
+    enabled: true
+    rank: 16
+    alpha: 32
+    dropout: 0.1
+    target_modules: ["q_proj", "v_proj", "k_proj", "o_proj", "dense"]
+    
+  # QLoRA settings
+  qlora:
+    enabled: false
+    bits: 4
+    double_quant: true
+    quant_type: "nf4"
+    
+  # Distributed training
+  distributed:
+    enabled: true
+    backend: "nccl"
+    strategy: "ddp"  # ddp, deepspeed, fairscale
+    
+  # DeepSpeed configuration
+  deepspeed:
+    enabled: false
+    config_file: "./config/deepspeed_config.json"
+    stage: 2  # ZeRO stage (1, 2, or 3)
+    
+  # Logging and checkpointing
+  logging:
+    log_level: "INFO"
+    logging_steps: 10
+    eval_steps: 500
+    save_steps: 1000
+    save_total_limit: 3
+    
+  # Evaluation settings
+  evaluation:
+    metric: "loss"
+    greater_is_better: false
+    eval_accumulation_steps: 4
+    
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 5
+    threshold: 0.001
+    
+  # Output directory
+  output_dir: "./output/fastvlm_training"
+  
+  # Resume training
+  resume_from_checkpoint: null
+  
+  # Weights & Biases
+  wandb:
+    enabled: true
+    project: "fastvlm"
+    entity: null
+    name: null
+    tags: ["vision-language", "efficient"]
+    
+# Data augmentation
+augmentation:
+  train:
+    random_resized_crop:
+      enabled: true
+      scale: [0.8, 1.0]
+      ratio: [0.75, 1.333]
+    horizontal_flip:
+      enabled: true
+      p: 0.5
+    color_jitter:
+      enabled: true
+      brightness: 0.4
+      contrast: 0.4
+      saturation: 0.4
+      hue: 0.1
+    random_erasing:
+      enabled: false
+      p: 0.5
+      scale: [0.02, 0.33]
+      ratio: [0.3, 3.3]
+      
+  val:
+    resize: 256
+    center_crop: 224
+    
+# Performance optimization
+optimization:
+  compile_model: true  # torch.compile
+  use_channels_last: true
+  pin_memory: true
+  non_blocking: true
+  find_unused_parameters: false
+  
+# Seed for reproducibility
+seed: 42
+
+# Hardware settings
+hardware:
+  cuda_visible_devices: "0,1,2,3"
+  allow_tf32: true
+  cudnn_benchmark: true
+  cudnn_deterministic: false
