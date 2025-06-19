@@ -1,0 +1,48 @@
+# Deployment Configuration
+
+environments:
+  development:
+    model_variant: "qwen-2.5-vl-3b"
+    quantization: "int8"
+    debug: true
+    
+  staging:
+    model_variant: "qwen-2.5-vl-7b"
+    quantization: "int8"
+    debug: false
+    
+  production:
+    model_variant: "qwen-2.5-vl-7b"
+    quantization: "int4"
+    debug: false
+    load_balancing: true
+    replicas: 3
+
+docker:
+  base_image: "qwenllm/qwenvl:2-cu121"
+  cuda_version: "12.1"
+  python_version: "3.10"
+  
+kubernetes:
+  namespace: "qwen-vl"
+  resources:
+    requests:
+      cpu: "4"
+      memory: "16Gi"
+      nvidia.com/gpu: "1"
+    limits:
+      cpu: "8"
+      memory: "32Gi"
+      nvidia.com/gpu: "1"
+      
+mobile_deployment:
+  ios:
+    xcode_version: "15.0"
+    ios_deployment_target: "15.0"
+    swift_version: "5.9"
+    
+  android:
+    compile_sdk_version: 34
+    min_sdk_version: 24
+    target_sdk_version: 34
+    kotlin_version: "1.9.0"

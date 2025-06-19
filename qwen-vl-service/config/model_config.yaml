@@ -1,0 +1,89 @@
+# Qwen 2.5-VL Model Configuration
+
+model:
+  name: "qwen-2.5-vl"
+  type: "vision_language"
+  
+  # Available model variants
+  variants:
+    qwen-2.5-vl-3b:
+      model_id: "Qwen/Qwen2.5-VL-3B-Instruct"
+      memory_requirement: "8GB"
+      target_device: "mobile"
+      quantization_ready: true
+    
+    qwen-2.5-vl-7b:
+      model_id: "Qwen/Qwen2.5-VL-7B-Instruct"
+      memory_requirement: "16GB"
+      target_device: "edge"
+      quantization_ready: true
+    
+    qwen-2.5-vl-32b:
+      model_id: "Qwen/Qwen2.5-VL-32B-Instruct"
+      memory_requirement: "64GB"
+      target_device: "server"
+      quantization_ready: true
+    
+    qwen-2.5-vl-72b:
+      model_id: "Qwen/Qwen2.5-VL-72B-Instruct"
+      memory_requirement: "160GB"
+      target_device: "datacenter"
+      quantization_ready: false
+
+  # Vision processing configuration
+  vision:
+    min_pixels: 256  # 16x16 pixels minimum
+    max_pixels: 16384  # 128x128 pixels maximum
+    dynamic_resolution: true
+    window_attention: true
+    fps_sampling: true
+    max_video_length: "1hour"
+    
+  # Text processing
+  text:
+    max_context_length: 32768
+    rope_scaling: "yarn"
+    flash_attention: true
+    
+  # Mobile optimizations
+  mobile:
+    quantization:
+      enabled: true
+      bits: [4, 8, 16]
+      calibration_dataset: "coco_captions"
+    
+    pruning:
+      enabled: true
+      sparsity: 0.3
+      structured: true
+    
+    compilation:
+      torch_compile: true
+      onnx_export: true
+      coreml_export: true
+      tflite_export: true
+
+# Deployment targets
+deployment:
+  server:
+    backend: "vllm"
+    gpu_requirements: ">=16GB VRAM"
+    batch_size: 8
+    max_concurrent_requests: 32
+    
+  mobile:
+    ios:
+      framework: "CoreML"
+      target_devices: ["iPhone 14+", "iPad Pro"]
+      memory_limit: "4GB"
+    
+    android:
+      framework: "TensorFlow Lite"
+      target_devices: ["Flagship Android"]
+      memory_limit: "6GB"
+      
+  edge:
+    jetson_nano: false
+    jetson_xavier: true
+    coral_tpu: true
+    intel_ncs: false
