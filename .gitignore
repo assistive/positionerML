@@ -187,3 +187,4 @@ model-training/checkpoints/
 model-training/*.mlmodel
 .DS_Store
 .DS_Store
+.DS_Store
