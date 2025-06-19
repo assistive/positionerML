@@ -1,0 +1,62 @@
+# Unified VLM Mobile Converter Configuration
+
+# Global settings
+output_directory: "mobile_models"
+cache_directory: "model_cache"
+log_level: "INFO"
+max_parallel_workers: 2
+
+# Model discovery paths
+model_search_paths:
+  - "fastvlm/models/pretrained"
+  - "internvl/models/pretrained" 
+  - "qwen-vl-service/models/pretrained"
+  - "models/pretrained"
+  - "~/.cache/huggingface/hub"
+
+# Conversion settings
+conversion:
+  platforms:
+    - "ios"
+    - "android"
+  
+  optimization:
+    quantization_bits: 8
+    enable_pruning: true
+    pruning_sparsity: 0.3
+    
+  mobile_specific:
+    ios:
+      compute_units: "cpuAndNeuralEngine"
+      minimum_deployment_target: "iOS15"
+      enable_metal_performance_shaders: true
+      
+    android:
+      optimization_level: "default"
+      enable_nnapi: true
+      target_api_level: 24
+
+# Model-specific overrides
+model_overrides:
+  qwen-2.5-vl-3b:
+    quantization_bits: 8
+    enable_pruning: true
+    
+  qwen-2.5-vl-7b:
+    quantization_bits: 8
+    enable_pruning: false  # Preserve accuracy
+    
+  fastvlm-tiny:
+    quantization_bits: 4   # Aggressive optimization
+    enable_pruning: true
+    
+  internvl2-2b:
+    quantization_bits: 8
+    enable_pruning: true
+
+# Hardware requirements check
+hardware_requirements:
+  minimum_ram_gb: 16
+  recommended_ram_gb: 32
+  gpu_memory_gb: 8
+  disk_space_gb: 100
