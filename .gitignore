@@ -188,3 +188,6 @@ model-training/*.mlmodel
 .DS_Store
 .DS_Store
 .DS_Store
+*.lock
+/internvl/models/pretrained/OpenGVLab_InternVL2-2B/models--OpenGVLab--InternVL2-2B/snapshots
+/internvl/models/pretrained/OpenGVLab_InternVL2-2B/models--OpenGVLab--InternVL2-2B/blobs

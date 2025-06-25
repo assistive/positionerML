@@ -1,0 +1,117 @@
+ˆ
+
+pixel_values*
+‡‡†Ä
+
+	input_ids*	
+Ä†Ä
+
+attention_mask*	
+Ä†ÄR
+var_18*
+ÄÄ†Ä¢Ä
+3InternVL vision-language model optimized for mobile1.0InternVL Mobile Converter"Custom¢:
++com.github.apple.coremltools.source_dialectTorchScript¢3
+#com.github.apple.coremltools.sourcetorch==2.6.0¢-
+$com.github.apple.coremltools.version8.3.0≤è†
+mainó
+0
+pixel_values 
+
+
+
+‡
+‡
+ 
+	input_ids
+
+
+Ä
+%
+attention_mask
+
+
+ÄCoreML5ê
+CoreML5Ñvar_18ì
+const$
+var_18
+
+
+Ä
+Ä*G
+val@
+
+
+Ä
+Ä*"
+@model_path/weights/weight.bin@*
+name
+
+	"
+op_18
+identity
+x
+
+pixel_values4
+pixel_values_tmp 
+
+
+
+‡
+‡*&
+name
+
+"
+pixel_values_tmpi
+identity
+x
+
+	input_ids$
+input_ids_tmp
+
+
+Ä*#
+name
+
+"
+input_ids_tmpx
+identity
+x
+
+attention_mask)
+attention_mask_tmp
+
+
+Ä*(
+name 
+
+"
+attention_mask_tmp"Á
+	buildInfoŸ"
+
+
+∆"√
+8
+!
+
+"
+coremltools-version
+
+	"
+8.3.0
+@
+)
+!
+"
+coremltools-component-torch
+
+	"
+2.6.0
+E
+(
+ 
+"
+coremltools-source-dialect
+
+"
+TorchScript

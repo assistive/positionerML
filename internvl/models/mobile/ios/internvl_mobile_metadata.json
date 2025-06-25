@@ -1,0 +1,30 @@
+{
+  "platform": "ios",
+  "format": "coreml_mlprogram",
+  "input_shape": [
+    1,
+    3,
+    224,
+    224
+  ],
+  "text_input_shape": [
+    1,
+    512
+  ],
+  "model_path": "models/pretrained/OpenGVLab_InternVL2-2B/models--OpenGVLab--InternVL2-2B/snapshots/e4f6747bd20f139e637642c6a058c6bd00b36919",
+  "config": {
+    "target_version": "15.0",
+    "compute_units": "neural_engine",
+    "precision": "float16",
+    "coreml": {
+      "model_name": "InternVLMobile",
+      "model_description": "InternVL vision-language model optimized for mobile",
+      "model_author": "Your Organization"
+    },
+    "optimization": {
+      "quantize_weights": true,
+      "compute_precision": "mixed"
+    }
+  },
+  "model_size_mb": 1.5019445419311523
+}

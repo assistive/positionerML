@@ -1,0 +1,122 @@
+{
+  "conversion_summary": {
+    "timestamp": "2025-06-19T21:00:38.667018",
+    "total_conversions": 6,
+    "successful_conversions": 0,
+    "failed_conversions": 6
+  },
+  "models_converted": [
+    {
+      "model_name": "internvl2-2b",
+      "original_size_gb": 4.0,
+      "original_params_b": 2.0,
+      "conversions": [
+        {
+          "platform": "all",
+          "format": "failed",
+          "success": false,
+          "file_path": "",
+          "size_mb": 0,
+          "conversion_time_s": 0,
+          "compression_ratio": 0,
+          "error": "Cannot copy out of meta tensor; no data! Please use torch.nn.Module.to_empty() instead of torch.nn.Module.to() when moving module from meta to a different device."
+        }
+      ]
+    },
+    {
+      "model_name": "llava-1.5-7b",
+      "original_size_gb": 14.0,
+      "original_params_b": 7.0,
+      "conversions": [
+        {
+          "platform": "all",
+          "format": "failed",
+          "success": false,
+          "file_path": "",
+          "size_mb": 0,
+          "conversion_time_s": 0,
+          "compression_ratio": 0,
+          "error": "quantile() input tensor must be either float or double dtype"
+        }
+      ]
+    },
+    {
+      "model_name": "minicpm-v-2.6",
+      "original_size_gb": 8.0,
+      "original_params_b": 8.0,
+      "conversions": [
+        {
+          "platform": "all",
+          "format": "failed",
+          "success": false,
+          "file_path": "",
+          "size_mb": 0,
+          "conversion_time_s": 0,
+          "compression_ratio": 0,
+          "error": "You are trying to access a gated repo.\nMake sure to have access to it at https://huggingface.co/openbmb/MiniCPM-V-2_6.\n403 Client Error. (Request ID: Root=1-6854dccb-4ca8b56503ee85585bfe8ce1;3871dfb1-4734-4ebc-b890-16351a495729)\n\nCannot access gated repo for url https://huggingface.co/openbmb/MiniCPM-V-2_6/resolve/main/config.json.\nAccess to model openbmb/MiniCPM-V-2_6 is restricted and you are not in the authorized list. Visit https://huggingface.co/openbmb/MiniCPM-V-2_6 to ask for access."
+        }
+      ]
+    },
+    {
+      "model_name": "internvl2-8b",
+      "original_size_gb": 16.0,
+      "original_params_b": 8.0,
+      "conversions": [
+        {
+          "platform": "all",
+          "format": "failed",
+          "success": false,
+          "file_path": "",
+          "size_mb": 0,
+          "conversion_time_s": 0,
+          "compression_ratio": 0,
+          "error": "Cannot copy out of meta tensor; no data! Please use torch.nn.Module.to_empty() instead of torch.nn.Module.to() when moving module from meta to a different device."
+        }
+      ]
+    },
+    {
+      "model_name": "qwen-2.5-vl-3b",
+      "original_size_gb": 6.0,
+      "original_params_b": 3.0,
+      "conversions": [
+        {
+          "platform": "all",
+          "format": "failed",
+          "success": false,
+          "file_path": "",
+          "size_mb": 0,
+          "conversion_time_s": 0,
+          "compression_ratio": 0,
+          "error": "quantile() input tensor must be either float or double dtype"
+        }
+      ]
+    },
+    {
+      "model_name": "qwen-2.5-vl-7b",
+      "original_size_gb": 14.0,
+      "original_params_b": 7.0,
+      "conversions": [
+        {
+          "platform": "all",
+          "format": "failed",
+          "success": false,
+          "file_path": "",
+          "size_mb": 0,
+          "conversion_time_s": 0,
+          "compression_ratio": 0,
+          "error": "quantile() input tensor must be either float or double dtype"
+        }
+      ]
+    }
+  ],
+  "platform_summary": {
+    "all": {
+      "total": 6,
+      "successful": 0,
+      "average_size_mb": 0.0,
+      "total_size_mb": 0
+    }
+  },
+  "size_statistics": {},
+  "time_statistics": {}
+}

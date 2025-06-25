@@ -1,0 +1,38 @@
+{
+  "platform": "android",
+  "format": "tflite",
+  "input_shape": [
+    1,
+    3,
+    224,
+    224
+  ],
+  "text_input_shape": [
+    1,
+    512
+  ],
+  "model_path": "models/pretrained/OpenGVLab_InternVL2-2B/models--OpenGVLab--InternVL2-2B/snapshots/tf_model",
+  "config": {
+    "target_api": 24,
+    "delegates": [
+      "gpu",
+      "nnapi"
+    ],
+    "tflite": {
+      "representative_dataset_size": 100,
+      "optimization": [
+        "DEFAULT"
+      ],
+      "supported_ops": [
+        "TFLITE_BUILTINS",
+        "SELECT_TF_OPS"
+      ]
+    },
+    "optimization": {
+      "quantize": true,
+      "prune": false,
+      "cluster": false
+    }
+  },
+  "model_size_mb": 0.002414703369140625
+}
