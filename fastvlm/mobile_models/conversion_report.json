@@ -1,0 +1,45 @@
+{
+  "conversion_summary": {
+    "timestamp": "2025-06-27 01:00:15",
+    "total_conversions": 4,
+    "successful_conversions": 4,
+    "platforms": [
+      "android",
+      "ios"
+    ],
+    "quantization_levels": [
+      16,
+      8
+    ]
+  },
+  "conversion_details": [
+    {
+      "platform": "ios",
+      "quantization_bits": 16,
+      "model_size_mb": 0.02,
+      "output_path": "mobile_models/ios/coreml/FastVLM_16bit.mlmodel",
+      "success": true
+    },
+    {
+      "platform": "ios",
+      "quantization_bits": 8,
+      "model_size_mb": 0.02,
+      "output_path": "mobile_models/ios/coreml/FastVLM_8bit.mlmodel",
+      "success": true
+    },
+    {
+      "platform": "android",
+      "quantization_bits": 16,
+      "model_size_mb": 0.1,
+      "output_path": "mobile_models/android/tflite/fastvlm_16bit.tflite",
+      "success": true
+    },
+    {
+      "platform": "android",
+      "quantization_bits": 8,
+      "model_size_mb": 0.1,
+      "output_path": "mobile_models/android/tflite/fastvlm_8bit.tflite",
+      "success": true
+    }
+  ]
+}

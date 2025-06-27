@@ -1,0 +1,21 @@
+# Core dependencies
+torch>=2.0.0
+torchvision
+torchaudio
+numpy>=1.21.0
+onnx>=1.14.0
+onnxruntime>=1.15.0
+
+# iOS conversion
+coremltools>=7.0
+
+# Android conversion
+tensorflow>=2.13.0,<2.16.0
+tf2onnx
+
+# Optional: ONNX-TensorFlow bridge (may require specific versions)
+# onnx-tf
+
+# Utilities
+pyyaml
+pillow

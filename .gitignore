@@ -191,3 +191,6 @@ model-training/*.mlmodel
 *.lock
 /internvl/models/pretrained/OpenGVLab_InternVL2-2B/models--OpenGVLab--InternVL2-2B/snapshots
 /internvl/models/pretrained/OpenGVLab_InternVL2-2B/models--OpenGVLab--InternVL2-2B/blobs
+/fastvlm/mobile_conversion_env
+/spatiallm/models/models--manycore-research--SpatialLM1.1-Qwen-0.5B/blobs
+/spatiallm/models/models--manycore-research--SpatialLM1.1-Qwen-0.5B/snapshots
