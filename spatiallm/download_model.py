@@ -2,14 +2,11 @@
 """
 download_model.py
 
-Script to download pre-trained spatialLM v1.1 models from HuggingFace or other repositories.
-Handles authentication, model selection, and verification of downloaded files.
+Script to download pre-trained spatialLM v1.1 models from HuggingFace.
+This should be placed in: spatiallm/download_model.py (root of spatiallm folder)
 
-Version 1.1 Updates:
-- Enhanced spatial reasoning capabilities
-- Improved mobile optimization
-- Better quantization support
-- Updated model architectures
+Updated for the actual SpatialLM 1.1 repository:
+https://huggingface.co/manycore-research/SpatialLM1.1-Qwen-0.5B
 """
 
 import os
@@ -17,14 +14,11 @@ import argparse
 import logging
 import sys
 import hashlib
-import requests
-import tqdm
 import json
-import shutil
 import datetime
 from pathlib import Path
-from huggingface_hub import hf_hub_download, snapshot_download, login
-from typing import Optional, List, Dict, Any, Union
+from huggingface_hub import snapshot_download, login
+from typing import Optional, List, Dict, Any
 
 # Setup logging
 logging.basicConfig(
@@ -36,9 +30,9 @@ logger = logging.getLogger("download_model")
 
 # Updated models info for v1.1 - Using actual Hugging Face repository
 DEFAULT_MODELS = {
-    "spatialLM-1.1-qwen-0.5b": {
+    "spatiallm-1.1-qwen-0.5b": {
         "repo_id": "manycore-research/SpatialLM1.1-Qwen-0.5B",
-        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "tokenizer_config.json", "vocab.json"],
+        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "tokenizer_config.json"],
         "description": "SpatialLM 1.1 based on Qwen-0.5B (500M parameters) - Enhanced spatial reasoning",
         "size_mb": 1900,
         "version": "1.1",
@@ -46,49 +40,14 @@ DEFAULT_MODELS = {
         "base_architecture": "qwen"
     },
     # Alias for easier access
-    "spatialLM-base-v1.1": {
+    "spatiallm-base": {
         "repo_id": "manycore-research/SpatialLM1.1-Qwen-0.5B",
-        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "tokenizer_config.json", "vocab.json"],
+        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "tokenizer_config.json"],
         "description": "SpatialLM 1.1 base model (500M parameters) - Enhanced spatial reasoning",
         "size_mb": 1900,
         "version": "1.1",
         "capabilities": ["enhanced_spatial_reasoning", "qwen_architecture", "mobile_optimized", "quantization_ready"],
         "base_architecture": "qwen"
-    },
-    # Placeholder for potential future models
-    "spatialLM-small-v1.1": {
-        "repo_id": "manycore-research/SpatialLM1.1-Qwen-0.5B",  # Using same repo for now
-        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "tokenizer_config.json", "vocab.json"],
-        "description": "SpatialLM 1.1 small model (500M parameters) - Mobile optimized",
-        "size_mb": 1900,
-        "version": "1.1",
-        "capabilities": ["mobile_first", "edge_deployment", "fast_inference", "qwen_architecture"],
-        "base_architecture": "qwen"
-    },
-    # Legacy v1.0 models for backward compatibility
-    "spatialLM-base": {
-        "repo_id": "spatialLM/spatialLM-base",
-        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "vocab.json"],
-        "description": "Base model v1.0 (220M parameters) - Legacy",
-        "size_mb": 850,
-        "version": "1.0",
-        "capabilities": ["basic_spatial_reasoning"]
-    },
-    "spatialLM-small": {
-        "repo_id": "spatialLM/spatialLM-small", 
-        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "vocab.json"],
-        "description": "Small model v1.0 (70M parameters) - Legacy",
-        "size_mb": 280,
-        "version": "1.0",
-        "capabilities": ["basic_spatial_reasoning"]
-    },
-    "spatialLM-large": {
-        "repo_id": "spatialLM/spatialLM-large",
-        "files": ["pytorch_model.bin", "config.json", "tokenizer.json", "vocab.json"],
-        "description": "Large model v1.0 (770M parameters) - Legacy",
-        "size_mb": 3100,
-        "version": "1.0",
-        "capabilities": ["basic_spatial_reasoning"]
     }
 }
 
@@ -99,7 +58,7 @@ def parse_arguments():
     parser.add_argument(
         "--model_name",
         type=str,
-        default="spatialLM-1.1-qwen-0.5b",
+        default="spatiallm-1.1-qwen-0.5b",
         choices=list(DEFAULT_MODELS.keys()) + ["custom"],
         help="Name of the model to download (defaults to SpatialLM 1.1 Qwen-0.5B model)"
     )
@@ -143,19 +102,6 @@ def parse_arguments():
     )
     
     parser.add_argument(
-        "--download_specific_files",
-        type=str,
-        nargs="+",
-        help="Download only specific files (e.g., --download_specific_files pytorch_model.bin config.json)"
-    )
-    
-    parser.add_argument(
-        "--verify_checksums",
-        action="store_true",
-        help="Verify downloaded files using checksums"
-    )
-    
-    parser.add_argument(
         "--list_models",
         action="store_true",
         help="List all available models and exit"
@@ -167,20 +113,6 @@ def parse_arguments():
         help="Show detailed information about the selected model"
     )
     
-    parser.add_argument(
-        "--prefer_v1_1",
-        action="store_true",
-        default=True,
-        help="Automatically prefer v1.1 models when available (default: True)"
-    )
-    
-    parser.add_argument(
-        "--include_mobile_configs",
-        action="store_true",
-        default=True,
-        help="Include mobile deployment configurations (default: True for v1.1 models)"
-    )
-    
     return parser.parse_args()
 
 def list_available_models():
@@ -188,29 +120,14 @@ def list_available_models():
     print("Available spatialLM models:")
     print("=" * 80)
     
-    # Group by version
-    v11_models = {k: v for k, v in DEFAULT_MODELS.items() if v.get("version") == "1.1"}
-    v10_models = {k: v for k, v in DEFAULT_MODELS.items() if v.get("version") == "1.0"}
-    
-    print("\n🚀 Version 1.1 Models (Recommended):")
-    print("-" * 40)
-    for name, info in v11_models.items():
-        print(f"  {name}:")
+    for name, info in DEFAULT_MODELS.items():
+        print(f"\n📋 {name}:")
         print(f"    Description: {info['description']}")
         print(f"    Size: {info['size_mb']} MB")
+        print(f"    Version: {info['version']}")
         print(f"    Architecture: {info.get('base_architecture', 'transformer')}")
         print(f"    Capabilities: {', '.join(info['capabilities'])}")
         print(f"    Repository: {info['repo_id']}")
-        print()
-    
-    print("📋 Version 1.0 Models (Legacy):")
-    print("-" * 40)
-    for name, info in v10_models.items():
-        print(f"  {name}:")
-        print(f"    Description: {info['description']}")
-        print(f"    Size: {info['size_mb']} MB")
-        print(f"    Repository: {info['repo_id']}")
-        print()
 
 def get_model_info(model_name: str) -> Dict[str, Any]:
     """Get information about a specific model"""
@@ -229,79 +146,47 @@ def setup_authentication(args):
         login(token=token)
         logger.info("Successfully authenticated with HuggingFace")
 
-def download_model_files(repo_id: str, files: List[str], output_dir: str, revision: str = "main", force_download: bool = False):
-    """Download model files from HuggingFace Hub"""
+def download_model_from_hub(repo_id: str, output_dir: str, revision: str = "main", force_download: bool = False):
+    """Download model from HuggingFace Hub"""
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     
-    downloaded_files = []
-    
-    for file in files:
-        try:
-            logger.info(f"Downloading {file}...")
-            
-            file_path = hf_hub_download(
-                repo_id=repo_id,
-                filename=file,
-                cache_dir=output_path,
-                revision=revision,
-                force_download=force_download,
-                local_files_only=False
-            )
-            
-            # Copy to output directory if not already there
-            target_path = output_path / file
-            if not target_path.exists() or force_download:
-                shutil.copy2(file_path, target_path)
-            
-            downloaded_files.append(str(target_path))
-            logger.info(f"✓ Downloaded {file} to {target_path}")
-            
-        except Exception as e:
-            logger.error(f"Failed to download {file}: {str(e)}")
-            raise
-    
-    return downloaded_files
-
-def download_full_repository(repo_id: str, output_dir: str, revision: str = "main", force_download: bool = False):
-    """Download entire model repository"""
-    output_path = Path(output_dir)
-    
     try:
-        logger.info(f"Downloading full repository {repo_id}...")
+        logger.info(f"Downloading model from {repo_id}...")
         
-        snapshot_path = snapshot_download(
+        # Download the entire model repository
+        downloaded_path = snapshot_download(
             repo_id=repo_id,
-            cache_dir=output_path,
             revision=revision,
+            cache_dir=str(output_path.parent),
             force_download=force_download,
             local_files_only=False
         )
         
-        logger.info(f"✓ Downloaded repository to {snapshot_path}")
-        return snapshot_path
+        # Copy to our desired output directory
+        import shutil
+        if Path(downloaded_path) != output_path:
+            if output_path.exists():
+                shutil.rmtree(output_path)
+            shutil.copytree(downloaded_path, output_path)
+        
+        logger.info(f"✓ Model downloaded successfully to: {output_path}")
+        return str(output_path)
         
     except Exception as e:
-        logger.error(f"Failed to download repository: {str(e)}")
+        logger.error(f"Download failed: {str(e)}")
         raise
 
-def verify_downloaded_files(files: List[str]) -> bool:
-    """Verify that all files were downloaded successfully"""
+def verify_downloaded_files(model_path: str, expected_files: List[str]) -> bool:
+    """Verify that all expected files were downloaded successfully"""
     logger.info("Verifying downloaded files...")
     
     all_valid = True
-    for file in files:
-        if os.path.exists(file):
-            size_mb = os.path.getsize(file) / (1024 * 1024)
+    for file in expected_files:
+        file_path = os.path.join(model_path, file)
+        if os.path.exists(file_path):
+            size_mb = os.path.getsize(file_path) / (1024 * 1024)
             logger.info(f"✓ {file}: {size_mb:.2f} MB")
-            
-            # Calculate file hash
-            sha256_hash = hashlib.sha256()
-            with open(file, "rb") as f:
-                for byte_block in iter(lambda: f.read(4096), b""):
-                    sha256_hash.update(byte_block)
-            file_hash = sha256_hash.hexdigest()
-            logger.info(f"  SHA256: {file_hash}")
         else:
             logger.error(f"✗ File {file} not found")
             all_valid = False
@@ -316,6 +201,7 @@ def create_model_info(model_name: str, repo_id: str, output_dir: str, version: s
         "version": version,
         "download_date": datetime.datetime.now().isoformat(),
         "spatialLM_version": "1.1",
+        "base_architecture": "qwen",
         "files": []
     }
     
@@ -325,7 +211,7 @@ def create_model_info(model_name: str, repo_id: str, output_dir: str, version: s
             file_path = os.path.join(root, file)
             relative_path = os.path.relpath(file_path, output_dir)
             
-            # Calculate file hash
+            # Calculate file hash for verification
             sha256_hash = hashlib.sha256()
             with open(file_path, "rb") as f:
                 for byte_block in iter(lambda: f.read(4096), b""):
@@ -338,50 +224,11 @@ def create_model_info(model_name: str, repo_id: str, output_dir: str, version: s
             })
     
     # Save info to file
-    with open(os.path.join(output_dir, "model_info.json"), "w") as f:
+    info_path = os.path.join(output_dir, "model_info.json")
+    with open(info_path, "w") as f:
         json.dump(info, f, indent=2)
     
-    logger.info(f"Created model info file: {os.path.join(output_dir, 'model_info.json')}")
-
-def download_mobile_configs(output_dir: str, version: str = "1.1"):
-    """Download mobile deployment configurations for v1.1 models"""
-    if version != "1.1":
-        return
-    
-    mobile_configs = {
-        "mobile_config.json": {
-            "ios": {
-                "quantization": "int8",
-                "compute_units": "CPU_AND_NE",
-                "minimum_deployment_target": "iOS15",
-                "optimization_profile": "neural_engine"
-            },
-            "android": {
-                "quantization": "int8", 
-                "delegate": "NNAPI",
-                "cpu_num_threads": 4,
-                "use_xnnpack": True
-            }
-        },
-        "optimization_config.json": {
-            "pruning": {
-                "enabled": True,
-                "sparsity": 0.3,
-                "structured": True
-            },
-            "distillation": {
-                "teacher_model": "spatialLM-large-v1.1",
-                "temperature": 4.0,
-                "alpha": 0.7
-            }
-        }
-    }
-    
-    for config_name, config_data in mobile_configs.items():
-        config_path = os.path.join(output_dir, config_name)
-        with open(config_path, "w") as f:
-            json.dump(config_data, f, indent=2)
-        logger.info(f"Created mobile config: {config_path}")
+    logger.info(f"Created model info file: {info_path}")
 
 def main():
     """Main function"""
@@ -398,26 +245,25 @@ def main():
             logger.error("Custom repo ID must be provided when using 'custom' model")
             sys.exit(1)
         repo_id = args.custom_repo_id
-        files = ["pytorch_model.bin", "config.json", "tokenizer.json", "vocab.json"]
+        expected_files = ["pytorch_model.bin", "config.json", "tokenizer.json"]
         version = "custom"
+        model_info = {"description": f"Custom model from {repo_id}"}
     else:
         model_info = get_model_info(args.model_name)
         repo_id = model_info["repo_id"]
-        files = model_info["files"]
+        expected_files = model_info["files"]
         version = model_info.get("version", "1.0")
     
     # Show model info if requested
     if args.model_info:
-        if args.model_name != "custom":
-            info = get_model_info(args.model_name)
-            print(f"Model: {args.model_name}")
-            print(f"Description: {info['description']}")
-            print(f"Version: {info['version']}")
-            print(f"Repository: {info['repo_id']}")
-            print(f"Size: {info['size_mb']} MB")
-            print(f"Files: {', '.join(info['files'])}")
-            if 'capabilities' in info:
-                print(f"Capabilities: {', '.join(info['capabilities'])}")
+        print(f"Model: {args.model_name}")
+        print(f"Description: {model_info['description']}")
+        print(f"Version: {version}")
+        print(f"Repository: {repo_id}")
+        if 'size_mb' in model_info:
+            print(f"Size: {model_info['size_mb']} MB")
+        if 'capabilities' in model_info:
+            print(f"Capabilities: {', '.join(model_info['capabilities'])}")
         return
     
     # Setup output directory
@@ -427,45 +273,33 @@ def main():
         # Setup authentication if needed
         setup_authentication(args)
         
-        # Download files
-        if args.download_specific_files:
-            files = args.download_specific_files
-        
         logger.info(f"Starting download of {args.model_name}")
         logger.info(f"Repository: {repo_id}")
         logger.info(f"Output directory: {model_output_dir}")
-        logger.info(f"Files to download: {files}")
         
-        downloaded_files = download_model_files(
+        # Download the model
+        downloaded_path = download_model_from_hub(
             repo_id=repo_id,
-            files=files,
             output_dir=model_output_dir,
             revision=args.revision,
             force_download=args.force_download
         )
         
         # Verify downloaded files
-        if args.verify_checksums:
-            if not verify_downloaded_files(downloaded_files):
-                logger.error("File verification failed")
-                sys.exit(1)
+        if not verify_downloaded_files(downloaded_path, expected_files):
+            logger.warning("Some files may be missing, but continuing...")
         
         # Create model info file
-        create_model_info(args.model_name, repo_id, model_output_dir, version)
-        
-        # Download mobile configs for v1.1 models
-        if args.include_mobile_configs and version == "1.1":
-            download_mobile_configs(model_output_dir, version)
+        create_model_info(args.model_name, repo_id, downloaded_path, version)
         
         logger.info("✅ Model download completed successfully!")
-        logger.info(f"Model saved to: {model_output_dir}")
+        logger.info(f"Model saved to: {downloaded_path}")
         
         # Show next steps
         print("\n🚀 Next Steps:")
-        print(f"1. Fine-tune the model: python training/finetune.py --model_path {model_output_dir}")
-        print(f"2. Convert for mobile: python ios/convert_to_coreml.py --model_path {model_output_dir}")
-        print(f"3. Evaluate performance: python training/evaluate.py --model_path {model_output_dir}")
-        print(f"4. Quick inference test: python scripts/test_model.py --model_path {model_output_dir}")
+        print(f"1. Test the model: python test_model.py --model_path {downloaded_path}")
+        print(f"2. Convert for iOS: python convert_to_coreml.py --model_path {downloaded_path}")
+        print(f"3. Convert for Android: python convert_to_tflite.py --model_path {downloaded_path}")
         
         if version == "1.1":
             print("\n✨ SpatialLM 1.1 Features Available:")
@@ -473,10 +307,9 @@ def main():
             print("- Improved mobile optimization and quantization")
             print("- Better performance on spatial understanding tasks")
             print("- Advanced coordinate processing capabilities")
-            print("- Mobile deployment configurations included")
         
         print(f"\n📖 Model Information:")
-        print(f"- Repository: manycore-research/SpatialLM1.1-Qwen-0.5B")
+        print(f"- Repository: {repo_id}")
         print(f"- Base Architecture: Qwen-0.5B")
         print(f"- Parameters: ~500M")
         print(f"- Optimized for: Spatial reasoning and mobile deployment")
