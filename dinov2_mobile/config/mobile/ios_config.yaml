@@ -1,0 +1,21 @@
+ios:
+  deployment_target: "15.0"
+  swift_version: "5.8"
+  xcode_version: "15.0"
+  
+  frameworks:
+    - CoreML
+    - Vision
+    - AVFoundation
+    - Metal
+    - MetalPerformanceShaders
+    
+  model_optimization:
+    quantization: "float16"
+    use_neural_engine: true
+    use_gpu: true
+    
+  performance:
+    max_inference_time_ms: 300
+    target_fps: 30
+    memory_limit_mb: 256

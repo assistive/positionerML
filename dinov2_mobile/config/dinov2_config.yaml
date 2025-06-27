@@ -1,0 +1,46 @@
+# DINOv2 Mobile Deployment Configuration
+
+model:
+  name: "dinov2"
+  variants:
+    - "dinov2_vits14"     # Small - 22M params
+    - "dinov2_vitb14"     # Base - 87M params  
+    - "dinov2_vitl14"     # Large - 304M params
+  
+  input_size: [224, 224, 3]
+  patch_size: 14
+  num_classes: 1000
+  
+mobile:
+  android:
+    target_api: 24
+    quantization: "int8"
+    use_nnapi: true
+    use_gpu_delegate: true
+    model_format: "tflite"
+    
+  ios:
+    deployment_target: "15.0"
+    quantization: "float16"
+    use_neural_engine: true
+    model_format: "mlmodel"
+    
+optimization:
+  quantization:
+    enabled: true
+    methods: ["dynamic", "static", "qat"]
+  
+  pruning:
+    enabled: false
+    sparsity: 0.5
+    
+  distillation:
+    enabled: true
+    teacher_model: "dinov2_vitl14"
+    student_model: "dinov2_vits14"
+
+deployment:
+  batch_size: 1
+  max_sequence_length: 257  # 16x16 + 1 CLS token
+  memory_optimization: true
+  performance_profiling: true

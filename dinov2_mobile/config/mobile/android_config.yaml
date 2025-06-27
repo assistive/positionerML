@@ -1,0 +1,22 @@
+android:
+  gradle_version: "8.0"
+  kotlin_version: "1.8.0"
+  compile_sdk: 34
+  min_sdk: 24
+  target_sdk: 34
+  
+  dependencies:
+    tensorflow_lite: "2.13.0"
+    tensorflow_lite_gpu: "2.13.0"
+    camera2: "1.3.0"
+    
+  model_optimization:
+    quantization: "int8"
+    use_gpu_delegate: true
+    use_nnapi: true
+    enable_xnnpack: true
+    
+  performance:
+    max_inference_time_ms: 500
+    target_fps: 30
+    memory_limit_mb: 512
