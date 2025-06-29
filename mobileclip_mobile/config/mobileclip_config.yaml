@@ -1,0 +1,68 @@
+# MobileCLIP Mobile Deployment Configuration
+
+model:
+  name: "mobileclip"
+  variants:
+    - "mobileclip_s0"     # 11.4M + 42.4M params - Fastest
+    - "mobileclip_s1"     # 25.2M + 42.4M params - Balanced  
+    - "mobileclip_s2"     # 35.7M + 42.4M params - Better accuracy
+    - "mobileclip_b"      # 86.3M + 42.4M params - Base model
+    - "mobileclip_blt"    # 86.3M + 42.4M params - Long training
+  
+  input_size: [224, 224, 3]
+  text_max_length: 77
+  embedding_dim: 512
+  pretrained_urls:
+    mobileclip_s0: "https://docs-assets.developer.apple.com/ml-research/datasets/mobileclip/mobileclip_s0.pt"
+    mobileclip_s1: "https://docs-assets.developer.apple.com/ml-research/datasets/mobileclip/mobileclip_s1.pt"
+    mobileclip_s2: "https://docs-assets.developer.apple.com/ml-research/datasets/mobileclip/mobileclip_s2.pt"
+    mobileclip_b: "https://docs-assets.developer.apple.com/ml-research/datasets/mobileclip/mobileclip_b.pt"
+    mobileclip_blt: "https://docs-assets.developer.apple.com/ml-research/datasets/mobileclip/mobileclip_blt.pt"
+  
+mobile:
+  android:
+    target_api: 24
+    quantization: "int8"
+    use_nnapi: true
+    use_gpu_delegate: true
+    model_format: "tflite"
+    max_memory_mb: 500
+    target_inference_ms: 100
+    
+  ios:
+    deployment_target: "15.0"
+    quantization: "float16"
+    use_neural_engine: true
+    model_format: "mlmodel"
+    max_memory_mb: 300
+    target_inference_ms: 50
+    
+optimization:
+  quantization:
+    enabled: true
+    methods: ["dynamic", "static", "qat"]
+    int8_calibration_samples: 1000
+  
+  pruning:
+    enabled: false
+    sparsity: 0.3
+    
+  knowledge_distillation:
+    enabled: true
+    teacher_model: "mobileclip_b"
+    student_model: "mobileclip_s0"
+    temperature: 4.0
+
+deployment:
+  batch_size: 1
+  enable_multimodal: true
+  performance_profiling: true
+  validation_datasets: ["imagenet", "coco", "flickr30k"]
+  
+huggingface:
+  organization: "apple"
+  models:
+    - "apple/MobileCLIP-S0"
+    - "apple/MobileCLIP-S1" 
+    - "apple/MobileCLIP-S2"
+    - "apple/MobileCLIP-B"

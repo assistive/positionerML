@@ -1,0 +1,35 @@
+ios:
+  deployment_target: "15.0"
+  xcode_version: "15.0"
+  swift_version: "5.9"
+  
+  frameworks:
+    - "CoreML"
+    - "Vision" 
+    - "Accelerate"
+    - "Metal"
+    - "MetalPerformanceShaders"
+    
+  optimization:
+    use_neural_engine: true
+    use_gpu: true
+    precision: "float16"
+    compute_units: "all"
+    
+  model_specs:
+    mobileclip_s0:
+      size_mb: 55
+      inference_ms: 30
+      memory_mb: 150
+    mobileclip_s1:
+      size_mb: 80
+      inference_ms: 50
+      memory_mb: 200
+    mobileclip_s2:
+      size_mb: 95
+      inference_ms: 70
+      memory_mb: 250
+    mobileclip_b:
+      size_mb: 150
+      inference_ms: 120
+      memory_mb: 350

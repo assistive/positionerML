@@ -1,0 +1,36 @@
+android:
+  gradle_version: "8.2"
+  kotlin_version: "1.9.0"
+  compile_sdk: 34
+  min_sdk: 24
+  target_sdk: 34
+  
+  dependencies:
+    tensorflow_lite: "2.13.0"
+    tensorflow_lite_gpu: "2.13.0"
+    tensorflow_lite_support: "0.4.4"
+    
+  optimization:
+    use_nnapi: true
+    use_gpu_delegate: true
+    use_hexagon_delegate: false
+    num_threads: 4
+    allow_fp16: true
+    
+  model_specs:
+    mobileclip_s0:
+      size_mb: 60
+      inference_ms: 80
+      memory_mb: 200
+    mobileclip_s1:
+      size_mb: 90
+      inference_ms: 120
+      memory_mb: 280
+    mobileclip_s2:
+      size_mb: 110
+      inference_ms: 150
+      memory_mb: 350
+    mobileclip_b:
+      size_mb: 180
+      inference_ms: 300
+      memory_mb: 500
