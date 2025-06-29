@@ -29,23 +29,30 @@ conda create -n dinov2_mobile python=3.9
 conda activate dinov2_mobile
 
 # Install dependencies
-pip install torch torchvision
-pip install coremltools  # For iOS
-pip install tensorflow   # For Android
-pip install pyyaml pillow numpy
+python setup.py
 ```
 
-### 2. Convert Models
+### 2. Fix Common Issues
+
+```bash
+# If you encounter dependency conflicts
+python fix_dependencies.py
+```
+
+### 3. Convert Models
 
 ```bash
 # Convert DINOv2-ViT-S for both platforms
-python scripts/convert/convert_dinov2.py --model dinov2_vits14 --platforms ios android
+python scripts/convert/convert_dinov2_enhanced.py --model dinov2_vits14 --platforms ios android
 
 # Convert specific model for iOS only
-python scripts/convert/convert_dinov2.py --model dinov2_vitb14 --platforms ios
+python scripts/convert/convert_dinov2_enhanced.py --model dinov2_vitb14 --platforms ios
+
+# If having issues, try CPU-only mode
+python scripts/convert/convert_dinov2_enhanced.py --model dinov2_vits14 --cpu-only --auto-install
 ```
 
-### 3. Create Deployment Packages
+### 4. Create Deployment Packages
 
 ```bash
 # Create ready-to-use deployment packages
@@ -54,7 +61,7 @@ python scripts/deploy/deploy_mobile.py --platforms ios android --zip
 # Packages will be created in ./deployment_packages/
 ```
 
-### 4. Mobile Integration
+### 5. Mobile Integration
 
 #### iOS Integration
 ```swift
@@ -122,12 +129,47 @@ Edit `config/dinov2_config.yaml` to customize:
 - Platform-specific optimizations
 - Performance targets
 
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **CoreML `upsample_bicubic2d` error:**
+   ```bash
+   # The enhanced converter handles this automatically
+   python scripts/convert/convert_dinov2_enhanced.py --cpu-only
+   ```
+
+2. **TensorFlow dependencies missing:**
+   ```bash
+   # Fix dependency issues
+   python fix_dependencies.py
+   ```
+
+3. **ONNX opset version errors:**
+   ```bash
+   # Use compatible versions automatically handled by the enhanced converter
+   python scripts/convert/convert_dinov2_enhanced.py --auto-install
+   ```
+
+### Quick Fixes
+
+```bash
+# For all dependency issues
+python setup.py
+
+# For specific TensorFlow addons issue
+pip install tensorflow-addons protobuf==3.20.3
+
+# For CoreML conversion issues
+python scripts/convert/convert_dinov2_enhanced.py --cpu-only --platforms ios
+```
+
 ## 📖 Documentation
 
-- [iOS Deployment Guide](docs/ios_deployment.md)
-- [Android Deployment Guide](docs/android_deployment.md)
-- [Performance Optimization](docs/performance_optimization.md)
-- [Troubleshooting](docs/troubleshooting.md)
+- [Installation Guide](INSTALLATION.md)
+- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [iOS Deployment Guide](mobile/ios/README.md)
+- [Android Deployment Guide](mobile/android/README.md)
 
 ## 🤝 Contributing
 
