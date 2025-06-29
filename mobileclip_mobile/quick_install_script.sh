@@ -1,4 +1,5 @@
-#!/bin/bash
+# Go back to parent directory and verify installation immediately
+cd ..#!/bin/bash
 
 # Definitive MobileCLIP Installation Fix
 # This script handles all the edge cases and ensures mobileclip package is properly installed
@@ -122,7 +123,26 @@ else
 fi
 
 echo "📦 Installing MobileCLIP in editable mode..."
-pip install -e .
+pip install -e . -v
+
+echo "🔍 Verifying installation immediately..."
+python -c "
+try:
+    import mobileclip
+    print('✅ MobileCLIP can be imported from installation directory')
+except ImportError as e:
+    print(f'❌ Cannot import mobileclip even from installation directory: {e}')
+    print('Checking what was actually installed...')
+    import sys
+    print(f'Python path: {sys.path}')
+    import subprocess
+    result = subprocess.run(['pip', 'show', 'mobileclip'], capture_output=True, text=True)
+    if result.returncode == 0:
+        print('pip show mobileclip:')
+        print(result.stdout)
+    else:
+        print('mobileclip not found in pip list')
+"
 
 # Go back to parent directory
 cd ..
